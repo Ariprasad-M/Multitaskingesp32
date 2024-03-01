@@ -2,15 +2,16 @@
 #include <PubSubClient.h>
 #include <WiFi.h>
 
-const char *ssid = "ACTFIBERNET";
-const char *password = "act12345";
-const char *mqtt_server = "mqtt.zig-web.com";
-const int mqtt_port = 1883;
-const char *mqtt_topic = "mutex/mqtt";
-const char *mqtt_topic2 = "mutex/mqtt2";
+const char *ssid = "Adonis";
+const char *password = "12345678";
+const char *esp_mqtt_server = "mqtt.zig-web.com";
+const int esp_mqtt_port = 1883;
+const char *esp_mqtt_topic1 = "mutex/mqtt";
+const char *esp_mqtt_topic2 = "mutex/mqtt2";
+bool wifiAvailable = false;
 
-void task1(void *pvParameters);
-void task2(void *pvParameters);
+void esp_task1(void *pvParameters);
+void esp_task2(void *pvParameters);
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -23,11 +24,14 @@ void setupWiFi()
   Serial.print("Connecting to ");
   Serial.println(ssid);
   WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED)
+  int attempts = 0;
+  while (WiFi.status() != WL_CONNECTED && attempts < 10)
   {
     delay(500);
     Serial.print(".");
+    attempts++;
   }
+  wifiAvailable = true;
   Serial.println("");
   Serial.println("WiFi connected");
 }
@@ -52,8 +56,8 @@ void reconnect()
     if (client.connect("ESP32Client"))
     {
       Serial.println("connected");
-      //client.subscribe(mqtt_topic);
-      client.subscribe(mqtt_topic2);
+      // client.subscribe(esp_mqtt_topic1);
+      client.subscribe(esp_mqtt_topic2);
     }
     else
     {
@@ -70,11 +74,12 @@ void setup()
 
   Serial.begin(115200);
   setupWiFi();
-  client.setServer(mqtt_server, mqtt_port);
+  void checkWiFi();
+  client.setServer(esp_mqtt_server, esp_mqtt_port);
   client.setCallback(callback);
   xMutex = xSemaphoreCreateMutex();
   xTaskCreatePinnedToCore(
-      task1,
+      esp_task1,
       "task1",
       10000,
       NULL,
@@ -82,7 +87,7 @@ void setup()
       NULL,
       0);
   xTaskCreatePinnedToCore(
-      task2,
+      esp_task2,
       "task2",
       10000,
       NULL,
@@ -95,21 +100,21 @@ void loop()
 {
 }
 
-void task1(void *pvParameters)
+void esp_task1(void *pvParameters)
 {
   while (1)
   {
-    
+
     if (client.connected())
     {
-      client.publish(mqtt_topic, "Hello from ESP32");
+      client.publish(esp_mqtt_topic1, "Hello from ESP32");
     }
 
     delay(500);
   }
 }
 
-void task2(void *pvParameters)
+void esp_task2(void *pvParameters)
 {
   while (1)
   {
@@ -119,5 +124,28 @@ void task2(void *pvParameters)
     }
     client.loop();
     delay(500);
+  }
+}
+void checkWiFi()
+{
+  while (1)
+  {
+    if (WiFi.status() != WL_CONNECTED)
+    {
+      if (wifiAvailable)
+      {
+        Serial.println("Wi-Fi disconnected");
+        wifiAvailable = false;
+      }
+    }
+    else
+    {
+      if (!wifiAvailable)
+      {
+        Serial.println("Wi-Fi reconnected");
+        wifiAvailable = true;
+      }
+    }
+    delay(1000);
   }
 }
