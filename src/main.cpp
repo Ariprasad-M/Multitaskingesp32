@@ -2,12 +2,12 @@
 #include <PubSubClient.h>
 #include <WiFi.h>
 
-const char *ssid = "********";
-const char *password = "*******";
-const char *mqtt_server = "xxxxxxxxx";
+const char *ssid = "ACTFIBERNET";
+const char *password = "act12345";
+const char *mqtt_server = "mqtt.zig-web.com";
 const int mqtt_port = 1883;
-const char *mqtt_topic = "xxxxxxxx";
-const char *mqtt_topic2 = "xxxxxxxx";
+const char *mqtt_topic = "mutex/mqtt";
+const char *mqtt_topic2 = "mutex/mqtt2";
 
 void task1(void *pvParameters);
 void task2(void *pvParameters);
