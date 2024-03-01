@@ -99,18 +99,13 @@ void task1(void *pvParameters)
 {
   while (1)
   {
-    if (!client.connected())
-    {
-      reconnect();
-    }
-    client.loop();
-    delay(1000);
+    
     if (client.connected())
     {
       client.publish(mqtt_topic, "Hello from ESP32");
     }
 
-    delay(2000);
+    delay(500);
   }
 }
 
@@ -123,6 +118,6 @@ void task2(void *pvParameters)
       reconnect();
     }
     client.loop();
-    delay(2000);
+    delay(500);
   }
 }
